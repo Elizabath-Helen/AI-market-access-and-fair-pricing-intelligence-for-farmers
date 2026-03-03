@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - Farmer Market Advisor{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4">
+            <i class="bi bi-graph-up-arrow"></i> Farmer Market Advisor
+        </h1>
+        <p class="lead mb-5">AI-Powered Market Intelligence for Small and Marginal Farmers</p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="{% url 'core:register' %}" class="btn btn-light btn-lg px-5">
+                <i class="bi bi-person-plus"></i> Get Started
+            </a>
+            <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-lg px-5">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="fw-bold mb-3">Why Choose Farmer Market Advisor?</h2>
+            <p class="text-muted">Make informed decisions and maximize your profits with our AI-powered platform</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-currency-rupee feature-icon"></i>
+                    <h4 class="mt-3 mb-3">Fair Price Analysis</h4>
+                    <p class="text-muted">Get AI-calculated fair price ranges for your produce based on real-time market data and historical trends.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-geo-alt feature-icon"></i>
+                    <h4 class="mt-3 mb-3">Market Recommendations</h4>
+                    <p class="text-muted">Discover the most profitable markets for your crops, with transport costs and net profit calculations.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-lightbulb feature-icon"></i>
+                    <h4 class="mt-3 mb-3">Explainable AI</h4>
+                    <p class="text-muted">Understand why we recommend certain prices and markets with clear, transparent explanations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="mb-3"><i class="bi bi-check-circle-fill text-success"></i> Real-Time Data</h4>
+                    <p class="text-muted">Access current market prices from government sources including Agmarknet.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="mb-3"><i class="bi bi-check-circle-fill text-success"></i> Easy to Use</h4>
+                    <p class="text-muted">Simple interface designed for farmers with varying levels of technical knowledge.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-5">
+                    <h3 class="mb-4">Ready to Maximize Your Profits?</h3>
+                    <p class="lead text-muted mb-4">Join thousands of farmers making informed decisions</p>
+                    <a href="{% url 'core:register' %}" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-person-plus"></i> Create Free Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

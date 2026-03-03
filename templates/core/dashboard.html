@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Farmer Market Advisor{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </h2>
+                    <p class="text-muted mb-0">Welcome, {{ user.username }}!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if show_results %}
+    <!-- Recommendations Results -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Analysis Complete!</h5>
+                <p class="mb-0">Your market recommendations for <strong>{{ query.quantity }} kg of {{ query.crop_type }}</strong> in <strong>{{ query.location }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fair Price Range -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-currency-rupee"></i> Fair Price Range</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-success mb-3">
+                        ₹{{ recommendations.fair_price_min }} - ₹{{ recommendations.fair_price_max }}
+                    </h2>
+                    <p class="text-muted mb-0">per kg</p>
+                    <div class="mt-3">
+                        <span class="badge bg-success">{{ recommendations.confidence }}% Confidence</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Key Factors</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        {% for factor in recommendations.factors %}
+                        <li class="mb-2">{{ factor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Recommendations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Top Market Recommendations</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Market</th>
+                                    <th>Expected Price</th>
+                                    <th>Distance</th>
+                                    <th>Transport Cost</th>
+                                    <th>Net Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for market in recommendations.markets %}
+                                <tr>
+                                    <td>
+                                        <span class="badge {% if market.rank == 1 %}bg-success{% elif market.rank == 2 %}bg-info{% else %}bg-secondary{% endif %}">
+                                            #{{ market.rank }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ market.market_name }}</strong><br>
+                                        <small class="text-muted">{{ market.region }}</small>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">₹{{ market.expected_price }}/kg</strong><br>
+                                        <small class="text-muted">Revenue: ₹{{ market.revenue }}</small>
+                                    </td>
+                                    <td>{{ market.distance_km }} km</td>
+                                    <td>
+                                        ₹{{ market.transport_cost }}/kg<br>
+                                        <small class="text-muted">Total: ₹{{ market.total_transport }}</small>
+                                    </td>
+                                    <td>
+                                        <strong class="{% if market.net_profit > 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ₹{{ market.net_profit }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="bg-light">
+                                        <small><i class="bi bi-info-circle"></i> <strong>Why this market?</strong> {{ market.reasoning }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> New Query
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search"></i> Get Market Recommendations
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.crop_type.id_for_label }}" class="form-label">
+                                <i class="bi bi-flower1"></i> Crop Type
+                            </label>
+                            {{ form.crop_type }}
+                            {% if form.crop_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.crop_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                <i class="bi bi-geo-alt"></i> Your Location
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.location.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.location.help_text }}</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                <i class="bi bi-box-seam"></i> Quantity (kg)
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.quantity.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.quantity.help_text }}</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-graph-up-arrow"></i> Get Recommendations
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle"></i> How It Works
+                    </h5>
+                    <ol class="small">
+                        <li class="mb-2">Select your crop type</li>
+                        <li class="mb-2">Enter your location</li>
+                        <li class="mb-2">Specify quantity to sell</li>
+                        <li class="mb-2">Get AI-powered recommendations</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-lightbulb"></i> Quick Tips
+                    </h5>
+                    <ul class="small mb-0">
+                        <li class="mb-2">Check recommendations regularly for best prices</li>
+                        <li class="mb-2">Consider transport costs in your decision</li>
+                        <li class="mb-2">Review historical data for trends</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recent_queries %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Queries
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Crop</th>
+                                    <th>Location</th>
+                                    <th>Quantity</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for query in recent_queries %}
+                                <tr>
+                                    <td>{{ query.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>{{ query.crop_type }}</td>
+                                    <td>{{ query.location }}</td>
+                                    <td>{{ query.quantity }} kg</td>
+                                    <td>
+                                        <span class="badge {% if query.status == 'completed' %}bg-success{% elif query.status == 'processing' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ query.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+
+{% block title %}Crop Recommendation - Farmer Market Advisor{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-flower1"></i> AI Crop Recommendation
+                    </h2>
+                    <p class="text-muted mb-0">Get personalized crop suggestions based on your land and climate</p>
+                </div>
+                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if show_results %}
+    <!-- Analysis Results -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Analysis Complete!</h5>
+                <p class="mb-0">Based on climatic conditions and soil analysis for <strong>{{ analysis.location }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Climate & Soil Information -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-thermometer-half" style="font-size: 2rem; color: #ff6f00;"></i>
+                    <h3 class="mt-2 mb-0">{{ analysis.weather.temp }}°C</h3>
+                    <p class="text-muted small mb-0">Temperature</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-droplet-fill" style="font-size: 2rem; color: #2196f3;"></i>
+                    <h3 class="mt-2 mb-0">{{ analysis.weather.humidity }}%</h3>
+                    <p class="text-muted small mb-0">Humidity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-cloud-rain-fill" style="font-size: 2rem; color: #4caf50;"></i>
+                    <h3 class="mt-2 mb-0">{{ analysis.weather.rainfall }}mm</h3>
+                    <p class="text-muted small mb-0">Annual Rainfall</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-geo-fill" style="font-size: 2rem; color: #795548;"></i>
+                    <h3 class="mt-2 mb-0 small">{{ analysis.soil_type|default:"Mixed" }}</h3>
+                    <p class="text-muted small mb-0">Soil Type</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Recommended Crops -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-star-fill"></i> Top Recommended Crops</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% for crop in analysis.recommendations %}
+                    <div class="p-4 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col-md-1 text-center">
+                                <span class="badge {% if forloop.counter == 1 %}bg-success{% elif forloop.counter == 2 %}bg-info{% else %}bg-secondary{% endif %}" style="font-size: 1.2rem; padding: 0.5rem 0.8rem;">
+                                    #{{ forloop.counter }}
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="mb-1">{{ crop.crop_name }}</h4>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-calendar3"></i> {{ crop.season }}<br>
+                                    <i class="bi bi-clock"></i> {{ crop.growth_period }}
+                                </p>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="mb-2">
+                                    <strong class="text-success" style="font-size: 1.5rem;">{{ crop.suitability_score }}%</strong>
+                                </div>
+                                <span class="badge bg-success">Suitability</span>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Expected Yield:</strong> {{ crop.profitability.yield_kg|floatformat:0 }} kg/hectare</p>
+                                <p class="mb-1"><strong>Price:</strong> ₹{{ crop.price_per_kg }}/kg</p>
+                                <p class="mb-0"><strong>Revenue:</strong> ₹{{ crop.profitability.revenue|floatformat:0 }}</p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <h4 class="text-success mb-1">₹{{ crop.profitability.net_profit|floatformat:0 }}</h4>
+                                <p class="text-muted small mb-1">Net Profit/hectare</p>
+                                <span class="badge bg-info">ROI: {{ crop.profitability.roi|floatformat:1 }}%</span>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <p class="mb-0"><strong>Why this crop?</strong></p>
+                                <ul class="small mb-0 mt-2">
+                                    {% for reason in crop.reasons %}
+                                    <li>{{ reason }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if analysis.land_analysis %}
+    <!-- Land Analysis (if image was uploaded) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-image"></i> Land Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if recommendation.land_image %}
+                            <img src="{{ recommendation.land_image.url }}" class="img-fluid rounded" alt="Land Image">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Analysis Results:</h6>
+                            <ul>
+                                <li><strong>Vegetation Cover:</strong> {{ analysis.land_analysis.vegetation_cover }}%</li>
+                                <li><strong>Moisture Level:</strong> {{ analysis.land_analysis.moisture_level|title }}</li>
+                                <li><strong>Terrain:</strong> {{ analysis.land_analysis.terrain|title }}</li>
+                                <li><strong>Estimated Soil:</strong> {{ analysis.land_analysis.estimated_soil_type }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> New Analysis
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Input Form -->
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-upload"></i> Analyze Your Land
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.land_image.id_for_label }}" class="form-label">
+                                <i class="bi bi-image"></i> Land Image (Optional)
+                            </label>
+                            {{ form.land_image }}
+                            {% if form.land_image.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.land_image.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.land_image.help_text }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                <i class="bi bi-geo-alt"></i> Location
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.location.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.location.help_text }}</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.soil_type.id_for_label }}" class="form-label">
+                                <i class="bi bi-layers"></i> Soil Type (Optional)
+                            </label>
+                            {{ form.soil_type }}
+                            {% if form.soil_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.soil_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.soil_type.help_text }}</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cpu"></i> Analyze & Get Recommendations
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle"></i> How It Works
+                    </h5>
+                    <ol class="small">
+                        <li class="mb-2">Upload a photo of your land (optional)</li>
+                        <li class="mb-2">Enter your location</li>
+                        <li class="mb-2">Select soil type if known</li>
+                        <li class="mb-2">Get AI-powered crop recommendations</li>
+                        <li class="mb-2">See profitability analysis</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-lightbulb"></i> What We Analyze
+                    </h5>
+                    <ul class="small mb-0">
+                        <li class="mb-2">Temperature & climate patterns</li>
+                        <li class="mb-2">Rainfall & humidity levels</li>
+                        <li class="mb-2">Soil type & characteristics</li>
+                        <li class="mb-2">Crop suitability scores</li>
+                        <li class="mb-2">Expected yield & profitability</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recent_recommendations %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Analyses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Soil Type</th>
+                                    <th>Top Recommendation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in recent_recommendations %}
+                                <tr>
+                                    <td>{{ rec.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>{{ rec.location }}</td>
+                                    <td>{{ rec.soil_type|default:"N/A" }}</td>
+                                    <td>
+                                        {% if rec.recommended_crops %}
+                                            <strong>{{ rec.recommended_crops.0.crop_name }}</strong>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

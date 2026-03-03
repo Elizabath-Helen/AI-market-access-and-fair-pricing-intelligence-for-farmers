@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Profit Advisor - Farmer Market Advisor{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-graph-up-arrow"></i> AI Profit Advisor
+                    </h2>
+                    <p class="text-muted mb-0">Get personalized strategies to maximize your farming profits</p>
+                </div>
+                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if show_results %}
+    <!-- Analysis Results -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Analysis Complete!</h5>
+                <p class="mb-0">We've analyzed your {{ analysis.crop_type }} farming operation and generated personalized profit strategies</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Situation Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-data"></i> Your Current Situation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-danger">₹{{ result.current_situation.total_costs|floatformat:0 }}</h4>
+                            <p class="text-muted small mb-0">Total Costs</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info">₹{{ result.current_situation.current_revenue|floatformat:0 }}</h4>
+                            <p class="text-muted small mb-0">Current Revenue</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">₹{{ result.current_situation.current_profit|floatformat:0 }}</h4>
+                            <p class="text-muted small mb-0">Current Profit</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-primary">{{ result.current_situation.current_roi|floatformat:1 }}%</h4>
+                            <p class="text-muted small mb-0">ROI</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <p class="mb-0"><strong>Yield:</strong> {{ result.current_situation.total_yield|floatformat:0 }} kg</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-0"><strong>Cost per kg:</strong> ₹{{ result.current_situation.cost_per_kg|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-0"><strong>Yield per acre:</strong> {{ result.current_situation.yield_per_acre|floatformat:0 }} kg</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Potential Improvement -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Potential Improvement</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-success mb-3">+₹{{ result.summary.potential_additional_profit|floatformat:0 }}</h2>
+                    <p class="lead mb-3">Additional profit possible with our strategies</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-0"><strong>Current Profit:</strong> ₹{{ result.summary.current_profit|floatformat:0 }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-0"><strong>Projected Profit:</strong> ₹{{ result.summary.projected_profit|floatformat:0 }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="badge bg-success" style="font-size: 1.1rem;">{{ result.summary.improvement_percentage|floatformat:1 }}% Improvement</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strategies -->
+    {% for strategy in result.strategies %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header {% if strategy.priority == 'High' %}bg-warning{% else %}bg-info{% endif %} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightbulb-fill"></i> Strategy {{ forloop.counter }}: {{ strategy.name }}
+                        </h5>
+                        <span class="badge bg-light text-dark">{{ strategy.priority }} Priority</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="lead">{{ strategy.description }}</p>
+                    
+                    <div class="alert alert-info">
+                        <strong><i class="bi bi-star-fill"></i> Recommendation:</strong> {{ strategy.recommendation }}
+                    </div>
+                    
+                    <p><strong>Why this strategy?</strong> {{ strategy.reason }}</p>
+                    
+                    <div class="alert alert-success">
+                        <strong><i class="bi bi-currency-rupee"></i> Potential Benefit:</strong> ₹{{ strategy.potential_benefit|floatformat:0 }}
+                    </div>
+
+                    {% if strategy.breakdown %}
+                    <!-- Channel Mix Breakdown -->
+                    <h6 class="mt-4">Channel Breakdown:</h6>
+                    <div class="row">
+                        {% for channel, data in strategy.breakdown.items %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="text-capitalize">{{ channel|replace:"_":" " }}</h6>
+                                    <p class="mb-1"><strong>{{ data.percentage }}%</strong> of yield</p>
+                                    <p class="mb-1">{{ data.quantity|floatformat:0 }} kg</p>
+                                    <p class="mb-1">₹{{ data.price|floatformat:2 }}/kg</p>
+                                    <p class="mb-2"><strong>Revenue: ₹{{ data.revenue|floatformat:0 }}</strong></p>
+                                    <small>
+                                        {% for adv in data.advantages %}
+                                        <span class="badge bg-success me-1">{{ adv }}</span>
+                                        {% endfor %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if strategy.details %}
+                    <!-- Value Addition Details -->
+                    <h6 class="mt-4">Processing Details:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>Product:</strong> {{ strategy.details.product }}</li>
+                                <li><strong>Value Increase:</strong> {{ strategy.details.value_increase }}%</li>
+                                <li><strong>Investment:</strong> {{ strategy.details.investment_level|title }}</li>
+                                <li><strong>Target Market:</strong> {{ strategy.details.target_market }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>Quantity to Process:</strong> {{ strategy.details.quantity_to_process|floatformat:0 }} kg</li>
+                                <li><strong>Processing Cost:</strong> ₹{{ strategy.details.processing_cost|floatformat:0 }}</li>
+                                <li><strong>Additional Revenue:</strong> ₹{{ strategy.details.additional_revenue|floatformat:0 }}</li>
+                                <li><strong>Net Benefit:</strong> ₹{{ strategy.details.net_benefit|floatformat:0 }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if strategy.advantages %}
+                    <!-- Collaboration Advantages -->
+                    <h6 class="mt-4">Advantages:</h6>
+                    <ul>
+                        {% for advantage in strategy.advantages %}
+                        <li>{{ advantage }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if strategy.opportunities %}
+                    <!-- Cost Optimization Opportunities -->
+                    <h6 class="mt-4">Cost Saving Opportunities:</h6>
+                    {% for opp in strategy.opportunities %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6>{{ opp.area }}</h6>
+                                    <p class="mb-0"><strong>Current:</strong> ₹{{ opp.current_cost|floatformat:0 }}</p>
+                                    <p class="mb-0 text-success"><strong>Save:</strong> ₹{{ opp.potential_saving|floatformat:0 }}</p>
+                                </div>
+                                <div class="col-md-8">
+                                    <strong>How to save:</strong>
+                                    <ul class="mb-0">
+                                        {% for method in opp.methods %}
+                                        <li>{{ method }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <h6 class="mt-4">Action Items:</h6>
+                    <ul>
+                        {% for action in strategy.action_items %}
+                        <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> New Analysis
+            </button>
+            <button class="btn btn-success" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Questionnaire Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Tell Us About Your Farming
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">Answer these questions to get personalized profit strategies</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                <strong>{{ forloop.counter }}. {{ field.label }}</strong>
+                                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in field.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cpu"></i> Analyze & Get Strategies
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recent_analyses %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Analyses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Crop</th>
+                                    <th>Land (acres)</th>
+                                    <th>Current Profit</th>
+                                    <th>Potential Gain</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in recent_analyses %}
+                                <tr>
+                                    <td>{{ rec.created_at|date:"M d, Y" }}</td>
+                                    <td>{{ rec.crop_type }}</td>
+                                    <td>{{ rec.land_area }}</td>
+                                    <td>₹{{ rec.current_situation.current_profit|floatformat:0 }}</td>
+                                    <td class="text-success">+₹{{ rec.summary.potential_additional_profit|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
