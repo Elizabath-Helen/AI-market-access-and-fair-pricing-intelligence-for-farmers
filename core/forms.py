@@ -3,7 +3,7 @@ Forms for the core app.
 """
 
 from django import forms
-from .models import FarmerQuery, CropRecommendation, ProfitAnalysis
+from .models import FarmerQuery, CropRecommendation, ProfitAnalysis, NegotiationAnalysis
 
 
 class FarmerQueryForm(forms.ModelForm):
@@ -236,3 +236,95 @@ class ProfitAnalysisForm(forms.ModelForm):
             'seed_cost', 'fertilizer_cost', 'labor_cost', 'irrigation_cost', 'other_costs',
             'current_price', 'storage_capacity', 'immediate_need', 'processing_interest'
         ]
+
+
+class NegotiationAnalysisForm(forms.ModelForm):
+    """Form for negotiation analysis input."""
+    
+    CROP_CHOICES = [
+        ('', 'Select your crop...'),
+        ('Wheat', 'Wheat'),
+        ('Rice', 'Rice'),
+        ('Cotton', 'Cotton'),
+        ('Sugarcane', 'Sugarcane'),
+        ('Maize', 'Maize'),
+        ('Soybean', 'Soybean'),
+        ('Groundnut', 'Groundnut'),
+        ('Potato', 'Potato'),
+        ('Tomato', 'Tomato'),
+        ('Onion', 'Onion'),
+        ('Other', 'Other'),
+    ]
+    
+    crop_type = forms.ChoiceField(
+        choices=CROP_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="What crop are you selling?",
+        required=True
+    )
+    
+    farmer_location = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g., Amritsar, Punjab'
+        }),
+        label="Your location (City, State)",
+        required=True
+    )
+    
+    quantity = forms.DecimalField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.1',
+            'min': '0.1',
+            'placeholder': 'e.g., 50'
+        }),
+        label="Quantity you want to sell (in quintals)",
+        help_text="1 quintal = 100 kg",
+        required=True
+    )
+    
+    offered_price = forms.DecimalField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0',
+            'placeholder': 'e.g., 2300'
+        }),
+        label="Price offered by buyer (₹ per quintal)",
+        required=True
+    )
+    
+    nearby_market_prices_text = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g., 2400, 2350, 2380'
+        }),
+        label="Nearby mandi prices (₹ per quintal, comma separated)",
+        help_text="Enter recent prices from nearby mandis, separated by commas",
+        required=False
+    )
+    
+    class Meta:
+        model = NegotiationAnalysis
+        fields = ['crop_type', 'farmer_location', 'quantity', 'offered_price']
+    
+    def clean_nearby_market_prices_text(self):
+        """Convert comma-separated prices to list of floats."""
+        prices_text = self.cleaned_data.get('nearby_market_prices_text', '')
+        
+        if not prices_text.strip():
+            return []
+        
+        try:
+            prices = [float(price.strip()) for price in prices_text.split(',') if price.strip()]
+            
+            # Validate prices are reasonable
+            for price in prices:
+                if price <= 0 or price > 100000:
+                    raise forms.ValidationError("Please enter reasonable price values (between ₹1 and ₹100,000)")
+            
+            return prices
+        except ValueError:
+            raise forms.ValidationError("Please enter valid numbers separated by commas (e.g., 2400, 2350, 2380)")

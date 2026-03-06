@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Negotiation Coach - Farmer Market Advisor{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-chat-dots"></i> AI Negotiation Coach
+                    </h2>
+                    <p class="text-muted mb-0">Get smart advice on price offers and negotiation strategies</p>
+                </div>
+                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if show_results %}
+    <!-- Analysis Results -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Analysis Complete!</h5>
+                <p class="mb-0">We've analyzed the price offer for your {{ analysis.crop_type }} and generated negotiation advice</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offer Analysis Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header {% if result.offer_analysis.status == 'FAIR' %}bg-success{% elif result.offer_analysis.status == 'UNDERPRICED' or result.offer_analysis.status == 'SLIGHTLY_UNDERPRICED' %}bg-warning{% else %}bg-info{% endif %} text-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-data"></i> Offer Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-primary">₹{{ result.offer_analysis.offered_price|floatformat:0 }}</h4>
+                            <p class="text-muted small mb-0">Offered Price</p>
+                            <small>(per quintal)</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info">₹{{ result.fair_price_range.modal_price|floatformat:0 }}</h4>
+                            <p class="text-muted small mb-0">Fair Market Price</p>
+                            <small>(per quintal)</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="{% if result.offer_analysis.price_difference_percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ result.offer_analysis.price_difference_percentage|floatformat:1 }}%
+                            </h4>
+                            <p class="text-muted small mb-0">Price Difference</p>
+                            <small>vs market rate</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="{% if result.offer_analysis.status == 'FAIR' %}text-success{% elif result.offer_analysis.status == 'UNDERPRICED' or result.offer_analysis.status == 'SLIGHTLY_UNDERPRICED' %}text-warning{% else %}text-info{% endif %}">
+                                {{ result.offer_analysis.status|title }}
+                            </h4>
+                            <p class="text-muted small mb-0">Offer Status</p>
+                        </div>
+                    </div>
+                    
+                    {% if result.offer_analysis.potential_profit_loss > 0 %}
+                    <hr>
+                    <div class="alert alert-warning">
+                        <strong><i class="bi bi-exclamation-triangle"></i> Potential Loss:</strong> 
+                        Accepting this offer may reduce your total income by ₹{{ result.offer_analysis.potential_profit_loss|floatformat:0 }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fair Price Range -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Fair Price Range</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h5 class="text-danger">₹{{ result.fair_price_range.min_price|floatformat:0 }}</h5>
+                            <p class="mb-0">Minimum Fair Price</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="text-success">₹{{ result.fair_price_range.modal_price|floatformat:0 }}</h5>
+                            <p class="mb-0">Market Rate</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="text-primary">₹{{ result.fair_price_range.max_price|floatformat:0 }}</h5>
+                            <p class="mb-0">Maximum Fair Price</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 20px;">
+                            {% with min_price=result.fair_price_range.min_price max_price=result.fair_price_range.max_price offered_price=result.offer_analysis.offered_price %}
+                            {% with range_size=max_price|add:min_price|floatformat:0 %}
+                            {% with offer_position=offered_price|add:min_price|floatformat:0 %}
+                            <div class="progress-bar bg-danger" style="width: 33.33%">Min</div>
+                            <div class="progress-bar bg-success" style="width: 33.33%">Fair</div>
+                            <div class="progress-bar bg-primary" style="width: 33.33%">Max</div>
+                            {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small>₹{{ result.fair_price_range.min_price|floatformat:0 }}</small>
+                            <small><strong>Your Offer: ₹{{ result.offer_analysis.offered_price|floatformat:0 }}</strong></small>
+                            <small>₹{{ result.fair_price_range.max_price|floatformat:0 }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Negotiation Advice -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Negotiation Advice</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-star-fill"></i> Recommendation:</h6>
+                        <strong>{{ result.negotiation_advice.recommendation }}</strong>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Suggested Negotiation Price:</h6>
+                            <h4 class="text-success">₹{{ result.negotiation_advice.suggested_price|floatformat:0 }}</h4>
+                            <small class="text-muted">per quintal</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Negotiation Range:</h6>
+                            <p class="mb-1"><strong>Minimum Acceptable:</strong> ₹{{ result.negotiation_advice.negotiation_range.min_acceptable|floatformat:0 }}</p>
+                            <p class="mb-1"><strong>Target Price:</strong> ₹{{ result.negotiation_advice.negotiation_range.target_price|floatformat:0 }}</p>
+                            <p class="mb-0"><strong>Maximum Realistic:</strong> ₹{{ result.negotiation_advice.negotiation_range.max_realistic|floatformat:0 }}</p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light">
+                        <h6><i class="bi bi-info-circle"></i> AI Explanation:</h6>
+                        <p class="mb-0">{{ result.negotiation_advice.explanation }}</p>
+                    </div>
+
+                    <h6 class="mt-4">Negotiation Tactics:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for tactic in result.negotiation_advice.negotiation_tactics %}
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success"></i> {{ tactic }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="mt-3">
+                        <span class="badge bg-secondary">Confidence Level: {{ result.negotiation_advice.confidence_level }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Context -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Market Context</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>Seasonal Trend:</strong> {{ result.market_context.seasonal_trend }}</li>
+                                <li><strong>Demand Level:</strong> {{ result.market_context.demand_level }}</li>
+                                <li><strong>Supply Situation:</strong> {{ result.market_context.supply_situation }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>Price Trend:</strong> {{ result.market_context.price_trend }}</li>
+                                <li><strong>Best Selling Period:</strong> {{ result.market_context.best_selling_period }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> New Analysis
+            </button>
+            <button class="btn btn-success" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Input Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Price Offer Analysis
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">Enter the details of the price offer you received to get negotiation advice</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                <strong>{{ field.label }}</strong>
+                                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in field.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-search"></i> Analyze Offer & Get Advice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recent_analyses %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Analyses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Crop</th>
+                                    <th>Offered Price</th>
+                                    <th>Status</th>
+                                    <th>Suggested Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in recent_analyses %}
+                                <tr>
+                                    <td>{{ rec.created_at|date:"M d, Y" }}</td>
+                                    <td>{{ rec.crop_type }}</td>
+                                    <td>₹{{ rec.offered_price|floatformat:0 }}</td>
+                                    <td>
+                                        <span class="badge {% if rec.offer_analysis.status == 'FAIR' %}bg-success{% elif rec.offer_analysis.status == 'UNDERPRICED' %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ rec.offer_analysis.status|title }}
+                                        </span>
+                                    </td>
+                                    <td class="text-success">₹{{ rec.negotiation_advice.suggested_price|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

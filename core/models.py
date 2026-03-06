@@ -117,3 +117,39 @@ class ProfitAnalysis(models.Model):
     
     def __str__(self):
         return f"Profit Analysis for {self.crop_type} - {self.created_at.strftime('%Y-%m-%d')}"
+
+
+class NegotiationAnalysis(models.Model):
+    """
+    Represents a price negotiation analysis for a farmer.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Farmer inputs
+    crop_type = models.CharField(max_length=100)
+    farmer_location = models.CharField(max_length=255)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, help_text="Quantity in quintals")
+    offered_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price offered by buyer per quintal")
+    nearby_market_prices = models.JSONField(default=list, help_text="List of nearby mandi prices")
+    
+    # Analysis results
+    offer_analysis = models.JSONField(default=dict)
+    fair_price_range = models.JSONField(default=dict)
+    negotiation_advice = models.JSONField(default=dict)
+    market_context = models.JSONField(default=dict)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    session_id = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, default='completed')
+    
+    class Meta:
+        db_table = 'negotiation_analyses'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['session_id', '-created_at']),
+            models.Index(fields=['crop_type']),
+        ]
+    
+    def __str__(self):
+        return f"Negotiation Analysis for {self.crop_type} - {self.created_at.strftime('%Y-%m-%d')}"

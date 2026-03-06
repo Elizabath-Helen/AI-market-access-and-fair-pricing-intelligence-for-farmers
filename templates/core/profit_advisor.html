@@ -134,7 +134,7 @@
                         <div class="col-md-4 mb-3">
                             <div class="card">
                                 <div class="card-body">
-                                    <h6 class="text-capitalize">{{ channel|replace:"_":" " }}</h6>
+                                    <h6 class="text-capitalize">{{ channel|title }}</h6>
                                     <p class="mb-1"><strong>{{ data.percentage }}%</strong> of yield</p>
                                     <p class="mb-1">{{ data.quantity|floatformat:0 }} kg</p>
                                     <p class="mb-1">₹{{ data.price|floatformat:2 }}/kg</p>
